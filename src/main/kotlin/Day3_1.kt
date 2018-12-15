@@ -1329,24 +1329,68 @@ val input = listOf(
 )
 
 class Board(
-    val columns: List<Column>
+    val rows: List<Row>
 ) {
-    fun addToBoard(inputCloth: String) {
+    operator fun get(index: Int) = rows[index]
 
+    companion object {
+        @JvmStatic
+        fun build(noRows: Int, noColums: Int): Board {
+            val columns = List(noColums) { buildEmptyRow(noRows) }
+
+            return Board(columns)
+        }
+
+        fun buildEmptyRow(noCols: Int): Row {
+            val emptySquare = Square(Status.EMPTY)
+
+            return Row(List(noCols) { emptySquare.copy() })
+        }
+    }
+
+    fun addToBoard(parsedInput: ParsedInput) {
+        for (col in parsedInput.startingCoords.column..parsedInput.startingCoords.column + parsedInput.sizeInCols - 1) {
+            for (row in parsedInput.startingCoords.row..parsedInput.startingCoords.row + parsedInput.sizeInRows - 1) {
+                this[row][col].putClothOn()
+            }
+        }
+    }
+
+    fun countMultiSquares(): Int {
+        return rows.map { it.squares.count { it.status == Status.MULTI } }.sum()
+    }
+
+    fun printBoard(): String {
+        return rows.map { it.toString() }.joinToString(separator = "\n", prefix = "\n")
     }
 }
 
-class Column(val squares: List<Square>)
+data class Row(val squares: List<Square>) {
+    operator fun get(index: Int) = squares[index]
 
-class Square(val status: Status)
-
-enum class Status {
-    EMPTY,
-    ONE,
-    MULTI
+    override fun toString(): String {
+        return squares.map { it.status.display }.joinToString("")
+    }
 }
 
-fun parseInput(input: String): List<Coords> {
+data class Square(var status: Status) {
+    fun putClothOn() {
+        if (status == Status.EMPTY) status = Status.ONE
+        else status = Status.MULTI
+    }
+}
+
+enum class Status(val display: String) {
+    EMPTY("."),
+    ONE("o"),
+    MULTI("m");
+
+    override fun toString(): String {
+        return display
+    }
+}
+
+fun parseInput(input: String): ParsedInput {
     val splitBySpace = input.split(" ")
     val startSquareString = splitBySpace[2].split(",", ":")
     val startSquareCoords = Coords(startSquareString[0].toInt(), startSquareString[1].toInt())
@@ -1357,11 +1401,20 @@ fun parseInput(input: String): List<Coords> {
     val clothSizeRows = sizeOfCloth[1].toInt()
 
 
-
-
-
-    )
-
+    return ParsedInput(startSquareCoords, clothSizeCols, clothSizeRows)
 }
 
 class Coords(val column: Int, val row: Int)
+
+class ParsedInput(val startingCoords: Coords, val sizeInCols: Int, val sizeInRows: Int)
+
+fun main() {
+    val board = Board.build(2000, 2000)
+
+    for (claim in input) {
+        board.addToBoard(parseInput(claim))
+    }
+
+    println(board.countMultiSquares())
+    return
+}
