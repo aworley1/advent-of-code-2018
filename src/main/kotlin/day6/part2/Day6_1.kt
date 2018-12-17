@@ -1,29 +1,31 @@
-package day6.part1
+package day6.part2
 
-import day6.part2.Grid
-import day6.part2.GridWithNearestSites
-import day6.part2.Site
-import day6.part2.Square
-import day6.part2.SquareWithNearestSite
 import java.io.File
 import kotlin.math.absoluteValue
 
 fun main() {
-    val inputSites = day6.part2.parseInput(day6.part2.readInput())
-    val grid = day6.part2.buildGridBigEnoughForAllSquares(inputSites.map { it.square })
+    val inputSites = parseInput(readInput())
+    val grid = buildGridBigEnoughForAllSquares(inputSites.map { it.square })
 
     val gridWithNearestSites = GridWithNearestSites.build(grid, inputSites)
 
-    val infiniteAreas = gridWithNearestSites.infiniteAreas()
+    val squaresWithDistances = gridWithNearestSites.squares.includingTotalDistanceToSites(inputSites)
 
-    val biggestArea = gridWithNearestSites.squares.groupBy { it.nearestSite }
-        .map { it.key to it.value.size }
-        .filter { it.first != null }
-        .filter { !infiniteAreas.contains(it.first!!.id) }
-        .maxBy { it.second }
+    println(squaresWithDistances.filter { it.distanceToSites < 10000 }.size)
 
-    println(biggestArea)
 }
+
+private fun List<SquareWithNearestSite>.includingTotalDistanceToSites(inputSites: List<Site>): List<SquareWithTotalDistanceToSites> {
+    return this.map {
+        SquareWithTotalDistanceToSites(it.square, distanceToAllSites(it.square, inputSites))
+    }
+}
+
+fun distanceToAllSites(square: Square, inputSites: List<Site>): Int {
+    return inputSites.map { it.square.distanceFrom(square) }.sum()
+}
+
+data class SquareWithTotalDistanceToSites(val square: Square, val distanceToSites: Int)
 
 fun readInput(): List<String> {
     return File("day6.txt").readLines()
