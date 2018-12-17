@@ -1,4 +1,4 @@
-import day6.part1.Day6_1Kt
+import day6.part2.Day6_2Kt
 import day6.part2.Grid
 import day6.part2.GridWithNearestSites
 import day6.part2.Site
@@ -26,7 +26,7 @@ class Day6_1Test extends Specification {
         def input = [" 81, 46 ", " 330, 289 "]
 
         when:
-        def result = day6.part2.Day6_1Kt.parseInput(input)
+        def result = Day6_2Kt.parseInput(input)
 
         then:
         result[0].square.x == 81
@@ -59,7 +59,7 @@ class Day6_1Test extends Specification {
                      new Site(2, new Square(4, 4))]
 
         when:
-        def grid = day6.part2.Day6_1Kt.buildGridBigEnoughForAllSquares([new Square(1, 1), new Square(4, 4)])
+        def grid = Day6_2Kt.buildGridBigEnoughForAllSquares([new Square(1, 1), new Square(4, 4)])
         def gridWithSites = GridWithNearestSites.build(grid, sites)
         def printed = gridWithSites.printed()
 
@@ -81,7 +81,7 @@ class Day6_1Test extends Specification {
                      new Site(3, new Square(3, 3))]
 
         when:
-        def grid = day6.part2.Day6_1Kt.buildGridBigEnoughForAllSquares([new Square(1, 1), new Square(4, 4), new Square(3,3)])
+        def grid = Day6_2Kt.buildGridBigEnoughForAllSquares([new Square(1, 1), new Square(4, 4), new Square(3,3)])
         def gridWithSites = GridWithNearestSites.build(grid, sites)
         def infiniteAreas = gridWithSites.infiniteAreas()
 
