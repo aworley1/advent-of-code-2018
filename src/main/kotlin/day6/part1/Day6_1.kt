@@ -9,6 +9,16 @@ fun main() {
 
     val gridWithNearestSites = GridWithNearestSites.build(grid, inputSites)
 
+    val infiniteAreas = gridWithNearestSites.infiniteAreas()
+
+    val biggestArea = gridWithNearestSites.squares.groupBy { it.nearestSite }
+        .map { it.key to it.value.size }
+        .filter { it.first != null }
+        .filter { !infiniteAreas.contains(it.first!!.id) }
+        .maxBy { it.second }
+
+    println(biggestArea)
+
     true
 }
 
@@ -17,12 +27,14 @@ fun readInput(): List<String> {
 }
 
 fun buildGridBigEnoughForAllSquares(input: List<Square>): Grid {
-    val minX = input.map { it.x }.min()!!
-    val maxX = input.map { it.x }.max()!!
-    val minY = input.map { it.y }.min()!!
-    val maxY = input.map { it.y }.min()!!
+    //Add or minus one so there is a border around the grid to capture
+    //infinite areas
+    val minX = input.map { it.x }.min()!! - 1
+    val maxX = input.map { it.x }.max()!! + 1
+    val minY = input.map { it.y }.min()!! - 1
+    val maxY = input.map { it.y }.max()!! + 1
 
-    return Grid.build(minX, maxX, minY, maxY)
+    return Grid.build(startX = minX, endX = maxX, startY = minY, endY = maxY)
 }
 
 fun parseInput(input: List<String>): List<Site> {
@@ -38,8 +50,8 @@ class Grid(val squares: List<Square>) {
     companion object {
         @JvmStatic
         fun build(startX: Int, startY: Int, endX: Int, endY: Int): Grid {
-            val squares = (startX..startX + endX).flatMap { x ->
-                (startY..startY + endY).map { y ->
+            val squares = (startX..endX).flatMap { x ->
+                (startY..endY).map { y ->
                     Square(x, y)
                 }
             }
@@ -50,7 +62,33 @@ class Grid(val squares: List<Square>) {
 }
 
 class GridWithNearestSites(val squares: List<SquareWithNearestSite>) {
+    fun printed(): String {
+        return squares
+            .sortedBy { it.square.x }
+            .groupBy { it.square.y }
+            .toSortedMap()
+            .map { it.value.map { it.display() }.joinToString("") }
+            .joinToString("\n", "\n")
+    }
+
+    fun infiniteAreas(): List<Int> {
+        val minX = squares.map { it.square.x }.min()!!
+        val maxX = squares.map { it.square.x }.max()!!
+        val minY = squares.map { it.square.y }.min()!!
+        val maxY = squares.map { it.square.y }.max()!!
+
+        val outsideSquares =
+            squares.filter { it.square.x == minX } +
+                    squares.filter { it.square.y == minY } +
+                    squares.filter { it.square.x == maxX } +
+                    squares.filter { it.square.y == maxY }
+
+        return outsideSquares.mapNotNull { it.nearestSite?.id }.distinct()
+
+    }
+
     companion object {
+        @JvmStatic
         fun build(grid: Grid, sites: List<Site>): GridWithNearestSites {
             return GridWithNearestSites(grid.squares.map {
                 SquareWithNearestSite(it, it.nearestSite(sites))
@@ -79,4 +117,9 @@ data class Square(val x: Int, val y: Int) {
     fun nearestSiteId(sites: List<Site>): Int? = nearestSite(sites)?.id
 }
 
-data class SquareWithNearestSite(val square: Square, val nearestSite: Site?)
+data class SquareWithNearestSite(val square: Square, val nearestSite: Site?) {
+    fun display(): String {
+        return if (nearestSite == null) "."
+        else nearestSite.id.toString()
+    }
+}
