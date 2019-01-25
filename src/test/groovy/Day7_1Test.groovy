@@ -1,43 +1,30 @@
 import day7.part1.Day7_1Kt
-import day7.part1.Dependency
-import day7.part1.Entity
 import spock.lang.Specification
 
 class Day7_1Test extends Specification {
-    def "should add two dependencies"() {
-        given:
-        def entityA = new Entity("A", [])
-        def entityB = new Entity("B", [])
-        def entityC = new Entity("C", [])
-
-        when:
-        def result = entityA.withDependencies([entityB, entityC])
-
-        then:
-        result.dependsOn == [entityB, entityC]
-    }
-
-    def "should create list of entities with dependencies"() {
-        given:
-        def dependency1 = new Dependency("C", "B")
-        def dependency2 = new Dependency("B", "A")
-        def dependency3 = new Dependency("B", "Z")
-
-        when:
-        def result = Day7_1Kt.createEntitiesFromDependencies([dependency1, dependency2, dependency3])
-
-        then:
-        result*.id == ["A", "B", "C", "Z"]
-        result*.dependsOn*.id == [[], ["A", "Z"], ["B"], []]
-    }
-
-    def "should find start of tree"() {
-        given:
-        def dependency1 = new Dependency("A", "B")
-
+    def "should solve the sample problem correctly"() {
         expect:
-        Day7_1Kt.findStartOfTree([dependency1]) == "B"
-
+        Day7_1Kt.solvePuzzle("day7_sample.txt") == "CABDFE"
     }
 
+    def "should use the first alphabetical available step"() {
+        expect:
+        Day7_1Kt.solvePuzzle("day7_sample.txt").startsWith("CA")
+    }
+
+    def "should do the next step next"() {
+        expect:
+        Day7_1Kt.solvePuzzle("day7_sample.txt").startsWith("CAB")
+    }
+
+    def "should find the first step to be done"() {
+        given:
+        def inputLines = Day7_1Kt.readInput("day7_sample.txt")
+
+        when:
+        def result = Day7_1Kt.findStart(inputLines)
+
+        then:
+        result == ["C"]
+    }
 }

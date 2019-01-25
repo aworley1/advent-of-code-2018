@@ -3,59 +3,93 @@ package day7.part1
 import java.io.File
 
 fun main() {
-    val dependencies = parseInput(readInput())
-
-    val startingStep = findStartOfTree(dependencies)
-
-    val entities = createEntitiesFromDependencies(dependencies)
-
-
-
-
+    println(solvePuzzle("day7.txt"))
 }
 
-fun readInput(): List<String> {
-    return File("day7.txt").readLines()
-}
+fun solvePuzzle(filename: String): String {
+    val puzzleInput = readInput(filename)
 
-fun parseInput(input: List<String>): List<Dependency> {
-    return input.map {
-        val split = it.split(" ")
-        Dependency(
-            thing = split[1],
-            dependsOn = split[7]
-        )
+    val startingSteps = findStart(puzzleInput)
+
+    val availableSteps = mutableSetOf<String>()
+    availableSteps.addAll(startingSteps)
+    val outputList = mutableListOf<String>()
+
+    while (availableSteps.isNotEmpty()) {
+        doSteps(availableSteps, outputList, puzzleInput)
     }
+    return outputList.joinToString("")
 }
 
-fun findStartOfTree(dependencies: List<Dependency>): String {
-    return (dependencies.map { it.dependsOn }.distinct() - dependencies.map { it.thing }.distinct()).single()
+fun readInput(filename: String): List<String> {
+    return File(filename).readLines()
 }
 
-fun createEntitiesFromDependencies(input: List<Dependency>): List<Entity> {
-    return (input.map { Entity(it.thing) } + input.map { Entity(it.dependsOn) })
+fun findStart(inputLines: List<String>): List<String> {
+    val stepsBefore = inputLines.getLines()
+        .map { it.mustBeFinished }
         .distinct()
-        .sortedBy { it.id }
+
+    val stepsAfter = inputLines.getLines()
+        .map { it.beforeCanBegin }
+        .distinct()
+
+    return (stepsBefore - stepsAfter).sorted()
+
 }
 
-private fun List<Entity>.addDependencies(input: List<Dependency>): List<Entity> {
-    return this.map { entity ->
-        val depencencyIds = input.filter { it.thing == entity.id }
-            .map { it.dependsOn }
-
-        val dependencyEntities = this.filter { depencencyIds.contains(it.id) }
-
-        entity.withDependencies(dependencyEntities)
-    }
+fun List<String>.getLines(): List<Line> {
+    return this
+        .map { it.split(" ") }
+        .map { Line(it[1], it[7]) }
 }
 
-data class Entity(
-    val id: String,
-    val dependsOn: List<Entity> = emptyList()
+data class Line(val mustBeFinished: String, val beforeCanBegin: String)
+
+fun doSteps(
+    availableSteps: MutableSet<String>,
+    outputList: MutableList<String>,
+    inputLines: List<String>
 ) {
-    fun withDependencies(dependencies: List<Entity>): Entity {
-        return this.copy(dependsOn = dependencies)
-    }
+    //use the first available step
+    val stepBeingDone = availableSteps.sorted().first()
+
+    //find all steps that come after
+    val newlyAvailableSteps = inputLines.findStepsAfterThisOne(stepBeingDone)
+
+    //check these are really available and add these newly available steps
+    val reallyAvailableSteps = filterToReallyAvailableSteps(stepBeingDone, inputLines, newlyAvailableSteps, outputList)
+    availableSteps.addAll(reallyAvailableSteps)
+
+    //remove this step from available steps and add to outputList
+    availableSteps.remove(stepBeingDone)
+    outputList.add(stepBeingDone)
 }
 
-data class Dependency(val thing: String, val dependsOn: String)
+fun filterToReallyAvailableSteps(
+    stepJustDone: String,
+    inputLines: List<String>,
+    newlyAvailableSteps: List<String>,
+    outputList: MutableList<String>
+): List<String> {
+    val doneSteps = outputList + stepJustDone
+
+    return newlyAvailableSteps.map { it to getAllThingsBeforeIt(it, inputLines) }
+        .filter { doneSteps.containsAll(it.second) }
+        .map { it.first }
+
+    //for each newly available step, get its dependencies
+    //check if all of its dependencies are in the outputlist + this letter
+    //output it
+
+}
+
+fun getAllThingsBeforeIt(letter: String, inputLines: List<String>): List<String> {
+    return inputLines.getLines().filter { letter == it.beforeCanBegin }.map { it.mustBeFinished }
+}
+
+private fun List<String>.findStepsAfterThisOne(letter: String): List<String> {
+    return this.getLines().filter { it.mustBeFinished == letter }
+        .map { it.beforeCanBegin }
+}
+
