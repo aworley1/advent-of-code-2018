@@ -67,7 +67,7 @@ class Day7_2Test extends Specification {
         def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
 
         then:
-        availableSteps == ["A","F"]
+        availableSteps == ["A", "F"]
     }
 
     def "when you've done C and A, available steps are B,D,F"() {
@@ -82,13 +82,51 @@ class Day7_2Test extends Specification {
                 new Line("F", "E")
         ]
 
-        def doneSteps = ["C","A"]
+        def doneSteps = ["C", "A"]
 
         when:
         def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
 
         then:
-        availableSteps == ["B","D","F"]
+        availableSteps == ["B", "D", "F"]
+    }
+
+    def "one worker should take 21 seconds"() {
+        given:
+        def inputFile = [
+                new Line("C", "A"),
+                new Line("C", "F"),
+                new Line("A", "B"),
+                new Line("A", "D"),
+                new Line("B", "E"),
+                new Line("D", "E"),
+                new Line("F", "E")
+        ]
+
+        when:
+        def timeTaken = Day7_2Kt.timeTaken(inputFile, 1)
+
+        then:
+        timeTaken == 21
+    }
+
+    def "two workers should take 15 seconds"() {
+        given:
+        def inputFile = [
+                new Line("C", "A"),
+                new Line("C", "F"),
+                new Line("A", "B"),
+                new Line("A", "D"),
+                new Line("B", "E"),
+                new Line("D", "E"),
+                new Line("F", "E")
+        ]
+
+        when:
+        def timeTaken = Day7_2Kt.timeTaken(inputFile, 2)
+
+        then:
+        timeTaken == 15
     }
 
     //get all beforeCanBegin + mustBeDone - in a list
