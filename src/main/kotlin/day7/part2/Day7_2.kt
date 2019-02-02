@@ -2,6 +2,8 @@ package day7.part2
 
 import java.io.File
 
+val STEP_TIME_BASELINE = 0
+
 data class Worker(
     var task: WorkerTask? = null
 ) {
@@ -57,13 +59,13 @@ data class WorkerTask(
         private fun timeForLetter(letter: String): Int {
             val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-            return alphabet.indexOf(letter, 0, true) + 1
+            return alphabet.indexOf(letter, 0, true) + 1 + STEP_TIME_BASELINE
         }
     }
 }
 
 fun main() {
-    println(timeTaken(readInput("day7.txt").getLines(), 1))
+    println(timeTaken(readInput("day7.txt").getLines(), 5))
 }
 
 fun timeTaken(inputSteps: List<Line>, numberOfWorkers: Int): Int {
