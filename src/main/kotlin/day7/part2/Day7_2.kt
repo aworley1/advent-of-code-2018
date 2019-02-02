@@ -2,11 +2,16 @@ package day7.part2
 
 import java.io.File
 
-val STEP_TIME_BASELINE = 0
+val STEP_TIME_BASELINE = 60
+
+fun main() {
+    println(timeTaken(readInput("day7.txt").getLines(), 5))
+}
 
 data class Worker(
     var task: WorkerTask? = null
 ) {
+
     fun getDoneWork(): String? {
         if (task?.isComplete() == true) {
             val completedTask = task
@@ -28,14 +33,10 @@ data class Worker(
             }
         }
     }
-
     fun status(): String {
         return task?.stepInProgress ?: " "
     }
-}
 
-private fun <T> Iterator<T>.nextOrNull(): T? {
-    return if (this.hasNext()) this.next() else null
 }
 
 data class WorkerTask(
@@ -62,10 +63,6 @@ data class WorkerTask(
             return alphabet.indexOf(letter, 0, true) + 1 + STEP_TIME_BASELINE
         }
     }
-}
-
-fun main() {
-    println(timeTaken(readInput("day7.txt").getLines(), 5))
 }
 
 fun timeTaken(inputSteps: List<Line>, numberOfWorkers: Int): Int {
@@ -96,10 +93,10 @@ private fun List<Worker>.stepsInProgress(): List<String> {
     return this.mapNotNull { it.task?.stepInProgress }
 }
 
-
 fun weStillHaveWork(inputSteps: List<Line>, doneSteps: MutableList<String>): Boolean {
     return (findAllSteps(inputSteps) - doneSteps).isNotEmpty()
 }
+
 
 fun readInput(filename: String): List<String> {
     return File(filename).readLines()
@@ -116,10 +113,10 @@ fun findAvailableSteps(inputLines: List<Line>, doneSteps: List<String>): List<St
 
 }
 
-
 fun findAllSteps(inputLines: List<Line>): List<String> {
     return (inputLines.map { it.beforeCanBegin } + inputLines.map { it.mustBeFinished }).distinct()
 }
+
 
 fun List<String>.getLines(): List<Line> {
     return this
@@ -129,12 +126,16 @@ fun List<String>.getLines(): List<Line> {
 
 data class Line(val mustBeFinished: String, val beforeCanBegin: String)
 
-
 fun getAllThingsBeforeIt(letter: String, inputLines: List<Line>): List<String> {
     return inputLines.filter { letter == it.beforeCanBegin }.map { it.mustBeFinished }
 }
 
+
 fun List<Worker>.statuses(): String {
     return this.map { "Status: " + it.status() }
         .joinToString(" ")
+}
+
+private fun <T> Iterator<T>.nextOrNull(): T? {
+    return if (this.hasNext()) this.next() else null
 }
