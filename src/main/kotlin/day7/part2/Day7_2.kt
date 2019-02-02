@@ -77,10 +77,11 @@ fun timeTaken(inputSteps: List<Line>, numberOfWorkers: Int): Int {
         workers.forEach { it.tick() }
         doneSteps.addAll(workers.mapNotNull { it.getDoneWork() })
 
-        val availableSteps = findAvailableSteps(inputSteps, doneSteps).iterator()
+        val availableSteps = findAvailableSteps(inputSteps, doneSteps) - workers.stepsInProgress()
+        val availableStepsIterator = availableSteps.iterator()
         //allocate available steps to the workers
 
-        workers.forEach { it.takeWorkIfHaveNone(availableSteps) }
+        workers.forEach { it.takeWorkIfHaveNone(availableStepsIterator) }
 
         println("Second: ${time}, ${workers.statuses()} Done: ${doneSteps.joinToString("")}")
         time++
@@ -88,6 +89,11 @@ fun timeTaken(inputSteps: List<Line>, numberOfWorkers: Int): Int {
 
     return time - 1
 }
+
+private fun List<Worker>.stepsInProgress(): List<String> {
+    return this.mapNotNull { it.task?.stepInProgress }
+}
+
 
 fun weStillHaveWork(inputSteps: List<Line>, doneSteps: MutableList<String>): Boolean {
     return (findAllSteps(inputSteps) - doneSteps).isNotEmpty()
