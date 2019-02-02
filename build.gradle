@@ -14,7 +14,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-script-runtime"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.1'
     compile "org.codehaus.groovy:groovy-all:2.4.15"
-    testCompile "org.spockframework:spock-core:1.2-groovy-2.4"
+    compile "org.spockframework:spock-core:1.2-groovy-2.4"
 }
 
 compileKotlin {
