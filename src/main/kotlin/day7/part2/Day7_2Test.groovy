@@ -105,6 +105,17 @@ class Day7_2Test extends Specification {
         timeTaken == 15
     }
 
+    def "should find the real answer"() {
+        given:
+        def realInput = Day7_2Kt.getLines(Day7_2Kt.readInput("day7.txt"))
+
+        when:
+        def timeTaken = Day7_2Kt.timeTaken(realInput, 5, 60)
+
+        then:
+        timeTaken == 941
+    }
+
     //get all beforeCanBegin + mustBeDone - in a list
     //remove everything from that list that has already been done
     //remove anything which has an unsatisfied dependency (in the done list)

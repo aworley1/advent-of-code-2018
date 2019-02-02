@@ -17,35 +17,55 @@ data class TaskInProgress(
 
 fun main() {
     val inputSteps = readInput("day7.txt").getLines()
-
     val timeTaken = timeTaken(inputSteps = inputSteps, totalNumberOfWorkers = 5, baseTimePerTask = 60)
 
     println("Answer to puzzle is: $timeTaken")
 }
 
-//class TasksInProgress() : MutableList<TaskInProgress> by mutableListOf()
+class TasksInProgress {
+    private val tasksInProgress: MutableList<TaskInProgress> = mutableListOf()
+//    private val doneSteps: MutableList<TaskInProgress> = mutableListOf()
+
+    private val finished
+        get() = tasksInProgress.filter { it.isComplete() }
+
+    val size
+        get() = tasksInProgress.size
+
+    val steps
+        get () = tasksInProgress.map { it.step }
+
+    val finishedSteps
+        get() = finished.map { it.step }
+
+    fun removeFinished() = tasksInProgress.removeAll(this.finished)
+
+    fun doOneSecondsWork() = tasksInProgress.forEach { it.workForOneSecond() }
+
+    fun startStep(step: String, baseTimePerTask: Int) {
+        tasksInProgress.add(TaskInProgress(step, timeToComplete(step, baseTimePerTask)))
+    }
+}
 
 @JvmOverloads
 fun timeTaken(inputSteps: List<Line>, totalNumberOfWorkers: Int, baseTimePerTask: Int = 0): Int {
 
-    val tasksInProgress = mutableListOf<TaskInProgress>()
+    val tasksInProgress = TasksInProgress()
     val doneSteps = mutableListOf<String>()
 
     var time = 0
     while (weStillHaveWork(inputSteps, doneSteps)) {
 
-        //Add any done steps to the list
-        val finishedTasks = tasksInProgress.filter { it.isComplete() }
-        doneSteps.addAll(finishedTasks.map { it.step })
-        tasksInProgress.removeAll(finishedTasks)
+        doneSteps.addAll(tasksInProgress.finishedSteps)
+        tasksInProgress.removeFinished()
 
         if (!weStillHaveWork(inputSteps, doneSteps)) break
 
         //decrement time of steps in progress
-        tasksInProgress.forEach { it.workForOneSecond() }
+        tasksInProgress.doOneSecondsWork()
 
         //find steps ready to be allocated out
-        val availableSteps = findAvailableSteps(inputSteps, doneSteps, tasksInProgress.map { it.step })
+        val availableSteps = findAvailableSteps(inputSteps, doneSteps, tasksInProgress.steps)
 
         val numberOfFreeWorkers = totalNumberOfWorkers - tasksInProgress.size
 
@@ -53,9 +73,7 @@ fun timeTaken(inputSteps: List<Line>, totalNumberOfWorkers: Int, baseTimePerTask
             availableSteps
                 .getOrNull(index)
                 ?.let {
-                    tasksInProgress.add(
-                        TaskInProgress(it, timeToComplete(it, baseTimePerTask))
-                    )
+                    tasksInProgress.startStep(it, baseTimePerTask)
                 }
         }
 
