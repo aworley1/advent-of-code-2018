@@ -1,10 +1,10 @@
-import day8.part1.Day8_1Kt
+import day8.Day8Kt
 import spock.lang.Specification
 
-class Day8_1Test extends Specification {
+class Day8Test extends Specification {
     def "should parse the sample data and calculate the correct metadata sum"() {
         when:
-        def result = Day8_1Kt.parse("day8_sample.txt")
+        def result = Day8Kt.parse("day8_sample.txt")
 
         then:
         result.metadataEntries == [1, 1, 2]
@@ -18,5 +18,9 @@ class Day8_1Test extends Specification {
         result.children[1].children[0].metadataEntries == [99]
 
         result.metadataTotal == 138
+
+        and: "should work out part 2"
+        result.value == 66
     }
+
 }
