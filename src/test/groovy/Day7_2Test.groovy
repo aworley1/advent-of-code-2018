@@ -1,5 +1,6 @@
 import day7.part2.Day7_2Kt
 import day7.part2.Line
+import day7.part2.WorkerTask
 import spock.lang.Specification
 
 class Day7_2Test extends Specification {
@@ -133,5 +134,14 @@ class Day7_2Test extends Specification {
     //remove everything from that list that has already been done
     //remove anything which has an unsatisfied dependency (in the done list)
 
+    def "letter C should take 3 seconds"() {
+        when:
+        def task = WorkerTask.from("C")
+
+        then:
+        task.stepInProgress == "C"
+        task.timeLeft == 3
+
+    }
 
 }

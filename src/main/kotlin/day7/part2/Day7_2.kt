@@ -3,48 +3,64 @@ package day7.part2
 import java.io.File
 
 data class Worker(
-    var task: WorkerTask = Free()
+    var task: WorkerTask? = null
 ) {
     fun getDoneWork(): String? {
-        return when (task) {
-            is Free -> null
-            is DoingSomething -> if (((task as DoingSomething).isComplete())
+        if (task?.isComplete() == true) {
+            val completedTask = task
+            task = null
+            return completedTask!!.stepInProgress
         }
+        return null
+    }
+
+    fun tick() {
+        task?.tick()
+    }
+
+    fun takeWorkIfHaveNone(iterator: Iterator<String>) {
+        if (task == null) {
+            val nextTask = iterator.nextOrNull()
+            if (nextTask != null) {
+                task = WorkerTask.from(nextTask)
+            }
+        }
+    }
+
+    fun status(): String {
+        return task?.stepInProgress ?: " "
     }
 }
 
-sealed class WorkerTask {
-    abstract fun isComplete() : Boolean
+private fun <T> Iterator<T>.nextOrNull(): T? {
+    return if (this.hasNext()) this.next() else null
 }
-data class DoingSomething(
+
+data class WorkerTask(
     var stepInProgress: String,
     var timeLeft: Int
-) : WorkerTask() {
+) {
     fun isComplete(): Boolean {
         return timeLeft == 0
     }
-}
 
-class Free : WorkerTask() {
-    override fun isComplete() = true
+    fun tick() {
+        timeLeft--
+    }
+
+    companion object {
+        @JvmStatic
+        fun from(letter: String): WorkerTask {
+            return WorkerTask(letter, timeForLetter(letter))
+        }
+
+        private fun timeForLetter(letter: String): Int {
+            val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+            return alphabet.indexOf(letter, 0, true) + 1
+        }
+    }
 }
-//
-//data class Worker(
-//    var stepInProgress: String? = null,
-//    var timeLeft: Int = 0
-//) {
-//    fun getDoneWork(): String? {
-//        if (timeLeft == 0) {
-//            val step = stepInProgress
-//            stepInProgress = null
-//            return step
-//        } else return null
-//    }
-//
-//    fun tick() {
-//        timeLeft--
-//    }
-//}
 
 fun main() {
     println(timeTaken(readInput("day7.txt").getLines(), 1))
@@ -57,15 +73,20 @@ fun timeTaken(inputSteps: List<Line>, numberOfWorkers: Int): Int {
     val doneSteps = mutableListOf<String>()
 
     while (weStillHaveWork(inputSteps, doneSteps)) {
-        time++
         //tick workers time
+        workers.forEach { it.tick() }
         doneSteps.addAll(workers.mapNotNull { it.getDoneWork() })
 
-        val availableSteps = findAvailableSteps(inputSteps, doneSteps)
+        val availableSteps = findAvailableSteps(inputSteps, doneSteps).iterator()
+        //allocate available steps to the workers
 
+        workers.forEach { it.takeWorkIfHaveNone(availableSteps) }
+
+        println("Second: ${time}, ${workers.statuses()} Done: ${doneSteps.joinToString("")}")
+        time++
     }
 
-    return 21
+    return time - 1
 }
 
 fun weStillHaveWork(inputSteps: List<Line>, doneSteps: MutableList<String>): Boolean {
@@ -103,4 +124,9 @@ data class Line(val mustBeFinished: String, val beforeCanBegin: String)
 
 fun getAllThingsBeforeIt(letter: String, inputLines: List<Line>): List<String> {
     return inputLines.filter { letter == it.beforeCanBegin }.map { it.mustBeFinished }
+}
+
+fun List<Worker>.statuses(): String {
+    return this.map { "Status: " + it.status() }
+        .joinToString(" ")
 }
