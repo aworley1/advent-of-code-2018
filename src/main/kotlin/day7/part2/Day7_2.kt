@@ -16,18 +16,19 @@ fun main() {
 @JvmOverloads
 fun calculateTimeTaken(inputSteps: List<Line>, totalNumberOfWorkers: Int, baseTimePerTask: Int = 0): Int {
 
-    val work = Work(totalNumberOfWorkers, baseTimePerTask)
-    var timer = 0
+    val work = Work(
+        totalNumberOfWorkers,
+        baseTimePerTask
+    )
 
     while (work.isNotDone(inputSteps)) {
         work.completeFinishedSteps()
         if (work.isAllDone(inputSteps)) break
-        timer++
         work.doOneSecondsWork()
         work.allocateNewTasksToWaitingWorkers(inputSteps)
     }
 
-    return timer
+    return work.timeTakenSoFar
 }
 
 data class TaskInProgress(
@@ -48,7 +49,12 @@ class Work(
     private val tasksInProgress: MutableList<TaskInProgress> = mutableListOf(),
     private val done: MutableList<String> = mutableListOf()
 ) {
-    fun doOneSecondsWork() = tasksInProgress.forEach { it.workForOneSecond() }
+    private var timer = 0
+
+    fun doOneSecondsWork() {
+        tasksInProgress.forEach { it.workForOneSecond() }
+        timer++
+    }   
 
     fun completeFinishedSteps() {
         done.addAll(finishedSteps)
@@ -74,6 +80,8 @@ class Work(
     }
 
     fun areTheseStepsAllDone(steps: List<String>) = doneSteps.containsAll(steps)
+
+    val timeTakenSoFar get() = timer
 
     val stepsDoneOrInProgress
         get() = doneSteps + stepsInProgress
