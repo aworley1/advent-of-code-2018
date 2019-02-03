@@ -1,7 +1,6 @@
 package day7.part2
 
-import day7.part2.Day7_2Kt
-import day7.part2.Line
+
 import spock.lang.Specification
 
 class Day7_2Test extends Specification {
@@ -18,11 +17,12 @@ class Day7_2Test extends Specification {
 
     def "should calculate available steps"() {
         given:
-        def inputFile = [new Line("A", "B")] // lines
-        def doneSteps = [] // letters
+        def inputFile = [new Line("A", "B")]
+        def doneSteps = []
+        def work = new Work(0, 0, [], doneSteps)
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["A"]
@@ -30,11 +30,13 @@ class Day7_2Test extends Specification {
 
     def "should calculate available steps 2"() {
         given:
-        def inputFile = [new Line("A", "B")] // lines
-        def doneSteps = ["A"] // letters
+        def inputFile = [new Line("A", "B")]
+        def doneSteps = ["A"]
+        def work = new Work(0, 0, [], doneSteps)
+
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["B"]
@@ -42,10 +44,12 @@ class Day7_2Test extends Specification {
 
     def "should give C as the starting point"() {
         given:
-        def doneSteps = [] // letters
+        def doneSteps = []
+        def work = new Work(0, 0, [], doneSteps)
+
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["C"]
@@ -54,9 +58,11 @@ class Day7_2Test extends Specification {
     def "when you've done C, available steps are A and F"() {
         given:
         def doneSteps = ["C"]
+        def work = new Work(0, 0, [], doneSteps)
+
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["A", "F"]
@@ -65,9 +71,11 @@ class Day7_2Test extends Specification {
     def "when you've done C and A, available steps are B,D,F"() {
         given:
         def doneSteps = ["C", "A"]
+        def work = new Work(0, 0, [], doneSteps)
+
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["B", "D", "F"]
@@ -76,10 +84,12 @@ class Day7_2Test extends Specification {
     def "when you've done C and are doing A, available steps are F"() {
         given:
         def doneSteps = ["C"]
-        def doingSteps = ["A"]
+        def doingSteps = [new TaskInProgress("A", 1)]
+        def work = new Work(0, 0, doingSteps, doneSteps)
+
 
         when:
-        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, doneSteps, doingSteps)
+        def availableSteps = Day7_2Kt.findAvailableSteps(inputFile, work)
 
         then:
         availableSteps == ["F"]
@@ -89,7 +99,7 @@ class Day7_2Test extends Specification {
         given:
 
         when:
-        def timeTaken = Day7_2Kt.timeTaken(inputFile, 1)
+        def timeTaken = Day7_2Kt.calculateTimeTaken(inputFile, 1)
 
         then:
         timeTaken == 21
@@ -99,7 +109,7 @@ class Day7_2Test extends Specification {
         given:
 
         when:
-        def timeTaken = Day7_2Kt.timeTaken(inputFile, 2)
+        def timeTaken = Day7_2Kt.calculateTimeTaken(inputFile, 2)
 
         then:
         timeTaken == 15
@@ -110,7 +120,7 @@ class Day7_2Test extends Specification {
         def realInput = Day7_2Kt.getLines(Day7_2Kt.readInput("day7.txt"))
 
         when:
-        def timeTaken = Day7_2Kt.timeTaken(realInput, 5, 60)
+        def timeTaken = Day7_2Kt.calculateTimeTaken(realInput, 5, 60)
 
         then:
         timeTaken == 941

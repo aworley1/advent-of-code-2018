@@ -3,6 +3,33 @@ package day7.part2
 import java.io.File
 
 
+fun main() {
+    val timeTaken = calculateTimeTaken(
+        inputSteps = readInput("day7.txt").getLines(),
+        totalNumberOfWorkers = 5,
+        baseTimePerTask = 60
+    )
+
+    println("Answer to puzzle is: $timeTaken")
+}
+
+@JvmOverloads
+fun calculateTimeTaken(inputSteps: List<Line>, totalNumberOfWorkers: Int, baseTimePerTask: Int = 0): Int {
+
+    val work = Work(totalNumberOfWorkers, baseTimePerTask)
+    var timer = 0
+
+    while (work.isNotDone(inputSteps)) {
+        work.completeFinishedSteps()
+        if (work.isAllDone(inputSteps)) break
+        timer++
+        work.doOneSecondsWork()
+        work.allocateNewTasksToWaitingWorkers(inputSteps)
+    }
+
+    return timer
+}
+
 data class TaskInProgress(
     var step: String,
     private var timeLeft: Int
@@ -15,97 +42,77 @@ data class TaskInProgress(
     }
 }
 
-fun main() {
-    val inputSteps = readInput("day7.txt").getLines()
-    val timeTaken = timeTaken(inputSteps = inputSteps, totalNumberOfWorkers = 5, baseTimePerTask = 60)
-
-    println("Answer to puzzle is: $timeTaken")
-}
-
-class TasksInProgress {
-    private val tasksInProgress: MutableList<TaskInProgress> = mutableListOf()
-//    private val doneSteps: MutableList<TaskInProgress> = mutableListOf()
-
-    private val finished
-        get() = tasksInProgress.filter { it.isComplete() }
-
-    val size
-        get() = tasksInProgress.size
-
-    val steps
-        get () = tasksInProgress.map { it.step }
-
-    val finishedSteps
-        get() = finished.map { it.step }
-
-    fun removeFinished() = tasksInProgress.removeAll(this.finished)
-
+class Work(
+    private val totalNumberOfWorkers: Int,
+    private val baseTimePerTask: Int,
+    private val tasksInProgress: MutableList<TaskInProgress> = mutableListOf(),
+    private val done: MutableList<String> = mutableListOf()
+) {
     fun doOneSecondsWork() = tasksInProgress.forEach { it.workForOneSecond() }
 
-    fun startStep(step: String, baseTimePerTask: Int) {
-        tasksInProgress.add(TaskInProgress(step, timeToComplete(step, baseTimePerTask)))
+    fun completeFinishedSteps() {
+        done.addAll(finishedSteps)
+        tasksInProgress.removeAll(finished)
     }
-}
 
-@JvmOverloads
-fun timeTaken(inputSteps: List<Line>, totalNumberOfWorkers: Int, baseTimePerTask: Int = 0): Int {
+    fun isAllDone(inputLines: List<Line>): Boolean = (findAllSteps(inputLines) - doneSteps).isEmpty()
 
-    val tasksInProgress = TasksInProgress()
-    val doneSteps = mutableListOf<String>()
+    fun isNotDone(inputLines: List<Line>): Boolean = !isAllDone(inputLines)
 
-    var time = 0
-    while (weStillHaveWork(inputSteps, doneSteps)) {
-
-        doneSteps.addAll(tasksInProgress.finishedSteps)
-        tasksInProgress.removeFinished()
-
-        if (!weStillHaveWork(inputSteps, doneSteps)) break
-
-        //decrement time of steps in progress
-        tasksInProgress.doOneSecondsWork()
-
-        //find steps ready to be allocated out
-        val availableSteps = findAvailableSteps(inputSteps, doneSteps, tasksInProgress.steps)
-
+    fun allocateNewTasksToWaitingWorkers(inputSteps: List<Line>) {
+        val availableSteps = findAvailableSteps(inputSteps, this)
         val numberOfFreeWorkers = totalNumberOfWorkers - tasksInProgress.size
 
         (0 until numberOfFreeWorkers).forEach { index ->
             availableSteps
                 .getOrNull(index)
                 ?.let {
-                    tasksInProgress.startStep(it, baseTimePerTask)
+                    startStep(it, baseTimePerTask)
                 }
         }
 
-        time++
     }
 
-    return time
-}
+    fun areTheseStepsAllDone(steps: List<String>) = doneSteps.containsAll(steps)
 
-fun timeToComplete(step: String, baseTime: Int): Int {
-    return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(step) + baseTime
-}
+    val stepsDoneOrInProgress
+        get() = doneSteps + stepsInProgress
 
-fun weStillHaveWork(inputSteps: List<Line>, doneSteps: MutableList<String>): Boolean {
-    return (findAllSteps(inputSteps) - doneSteps).isNotEmpty()
+    private val doneSteps
+        get() = done.toList()
+
+    private val stepsInProgress
+        get () = tasksInProgress.map { it.step }
+
+    private fun startStep(step: String, baseTimePerTask: Int) {
+        tasksInProgress.add(TaskInProgress(step, timeNeededToCompleteStep(step, baseTimePerTask)))
+    }
+
+    private val finished
+        get() = tasksInProgress.filter { it.isComplete() }
+
+    private val finishedSteps
+        get() = finished.map { it.step }
+
+    private fun timeNeededToCompleteStep(step: String, baseTime: Int): Int {
+        return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(step) + baseTime
+    }
+
 }
 
 fun readInput(filename: String): List<String> {
     return File(filename).readLines()
 }
 
-@JvmOverloads
 fun findAvailableSteps(
     inputLines: List<Line>,
-    doneSteps: List<String>,
-    stepsInProgress: List<String> = listOf()
+    work: Work
 ): List<String> {
-    val stepsToDo = findAllSteps(inputLines) - doneSteps - stepsInProgress
+    val stepsToDo = findAllSteps(inputLines) - work.stepsDoneOrInProgress
 
     return stepsToDo
         .map { it to getAllThingsBeforeIt(it, inputLines) }
-        .filter { (_, dependencies) -> doneSteps.containsAll(dependencies) }
+        .filter { (_, dependencies) -> work.areTheseStepsAllDone(dependencies) }
         .map { (step, _) -> step }
         .sorted()
 
