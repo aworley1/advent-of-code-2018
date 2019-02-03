@@ -1,6 +1,7 @@
-package day7.part2
-
-
+import day7.part2.Day7_2Kt
+import day7.part2.Line
+import day7.part2.TaskInProgress
+import day7.part2.Work
 import spock.lang.Specification
 
 class Day7_2Test extends Specification {
